@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-:root { --ink:#14212d; --muted:#687686; --paper:#f8f8f6; --surface:#fff; --line:#dce2e6; --accent:#2563a6; --navy:#102536; }
+:root { --ink:#14212d; --muted:#687686; --paper:#f8f8f6; --surface:#fff; --line:#dce2e6; --accent:#2563a6; --navy:#102536; --hq:#101719; --hq-panel:#182124; --hq-line:#314044; --hq-muted:#9ba9aa; --hq-cream:#f3eee3; }
 * { box-sizing:border-box; }
 html { scroll-behavior:smooth; }
 body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-geist),Arial,sans-serif; }
