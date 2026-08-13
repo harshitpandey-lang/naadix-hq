@@ -6,28 +6,41 @@ import {
 import { SignOutButton } from "./sign-out-button";
 
 const primary = [
-  { label: "Overview", icon: LayoutDashboard }, { label: "Calendar", icon: CalendarDays },
-  { label: "Goals", icon: Goal }, { label: "Analytics", icon: BarChart3 },
+  { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Calendar", href: "/dashboard/calendar", icon: CalendarDays },
+  { label: "Goals", href: "/dashboard/goals", icon: Goal },
+  { label: "Analytics", icon: BarChart3 },
 ];
 const secondary = [
   { label: "Journal", icon: BookOpenText }, { label: "Trips", icon: Map },
   { label: "Gallery", icon: GalleryVerticalEnd }, { label: "Projects", icon: FolderKanban },
 ];
 
-function NavItems({ items }: { items: typeof primary }) {
+function NavItems({ items }: { items: (typeof primary | typeof secondary) }) {
   return (
     <div className="grid gap-1">
-      {items.map(({ label, icon: Icon }) =>
-        label === "Overview" ? (
-          <Link key={label} href="/dashboard" className="flex items-center gap-3 rounded-md bg-white/10 px-3 py-2 text-sm font-medium text-white">
-            <Icon size={17} />{label}
-          </Link>
-        ) : (
-          <span key={label} aria-disabled="true" className="flex cursor-not-allowed items-center gap-3 rounded-md px-3 py-2 text-sm text-[#859598]">
-            <Icon size={17} />{label}<small className="ml-auto text-[10px] uppercase tracking-[.12em]">Soon</small>
+      {items.map((item) => {
+        const Icon = item.icon;
+        const href = "href" in item ? item.href : null;
+        const isActive = href === "/dashboard" || href === "/dashboard/calendar" || href === "/dashboard/goals";
+
+        if (href) {
+          return (
+            <Link key={item.label} href={href} className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${isActive ? "bg-white/10 text-white" : "text-[#859598] hover:text-white transition"}`}>
+              <Icon size={17} />
+              {item.label}
+            </Link>
+          );
+        }
+
+        return (
+          <span key={item.label} aria-disabled="true" className="flex cursor-not-allowed items-center gap-3 rounded-md px-3 py-2 text-sm text-[#859598]">
+            <Icon size={17} />
+            {item.label}
+            <small className="ml-auto text-[10px] uppercase tracking-[.12em]">Soon</small>
           </span>
-        ),
-      )}
+        );
+      })}
     </div>
   );
 }
