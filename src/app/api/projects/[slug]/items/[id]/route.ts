@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
-import { verifyCEOSession } from "@/lib/ceo-auth";
+import { createAdminClient } from "@/src/lib/supabase/admin";
+import { verifyCEOSession } from "@/src/lib/ceo-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(
@@ -14,7 +14,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { data, error } = await supabase
       .from("project_items")
@@ -51,7 +51,7 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { error } = await supabase
       .from("project_items")

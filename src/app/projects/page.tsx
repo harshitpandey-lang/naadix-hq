@@ -1,8 +1,8 @@
-import { verifyCEOSession } from "@/lib/ceo-auth";
+import { verifyCEOSession } from "@/src/lib/ceo-auth";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { ProjectList } from "@/components/projects/project-list";
-import { ProjectStats } from "@/components/projects/project-stats";
+import { createAdminClient } from "@/src/lib/supabase/admin";
+import { ProjectList } from "@/src/components/projects/project-list";
+import { ProjectStats } from "@/src/components/projects/project-stats";
 
 export const metadata = {
   title: "Project Portfolio - Naadix HQ CEO Portal",
@@ -24,7 +24,7 @@ export default async function ProjectsDashboardPage(props: {
   }
 
   const searchParams = await props.searchParams;
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Build query
   let query = supabase
@@ -47,7 +47,8 @@ export default async function ProjectsDashboardPage(props: {
     );
   }
 
-  const { data: projects = [] } = await query;
+  const { data: projectsData } = await query;
+  const projects = projectsData ?? [];
 
   const categories = [
     "Robotics & Embedded Systems",

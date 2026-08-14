@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
-import { verifyCEOSession } from "@/lib/ceo-auth";
+import { createAdminClient } from "@/src/lib/supabase/admin";
+import { verifyCEOSession } from "@/src/lib/ceo-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
@@ -14,7 +14,7 @@ export async function POST(
 
     const { slug } = await params;
     const body = await request.json();
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Get project ID
     const { data: project, error: projectError } = await supabase

@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
-import { verifyCEOSession } from "@/lib/ceo-auth";
+import { createAdminClient } from "@/src/lib/supabase/admin";
+import { verifyCEOSession } from "@/src/lib/ceo-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -9,9 +9,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { searchParams } = new URL(request.url);
-    
+
     const category = searchParams.get("category");
     const status = searchParams.get("status");
     const search = searchParams.get("search");
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       query = query.or(
-        `name.ilike.%${search}%,short_description.ilike.%${search}%,skills.cs.{"${search}"},technologies.cs.{"${search}"}`,
+        `name.ilike.%${search}%,short_description.ilike.%${search}%`,
       );
     }
 
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Generate slug from name
     const slug = body.name

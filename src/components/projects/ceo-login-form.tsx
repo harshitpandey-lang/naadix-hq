@@ -78,7 +78,7 @@ export function CEOLoginForm() {
               onChange={handleChange}
               disabled={isLoading}
               className="w-full px-4 py-2 bg-[var(--hq)] border border-[var(--hq-line)] rounded text-[var(--hq-cream)] placeholder-[var(--hq-muted)] focus:outline-none focus:border-[var(--accent)] disabled:opacity-50"
-              placeholder="geniuslabs"
+              placeholder="Enter username"
             />
           </div>
 

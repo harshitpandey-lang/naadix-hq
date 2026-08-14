@@ -1,4 +1,4 @@
-import { createCEOSession } from "@/lib/ceo-auth";
+import { createCEOSession } from "@/src/lib/ceo-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {

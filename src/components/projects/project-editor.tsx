@@ -36,7 +36,7 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: value === "" ? null : value,
     }));
   };
 
@@ -122,10 +122,11 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
               </label>
               <select
                 name="status"
-                value={formData.status}
+                value={formData.status || ""}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 bg-[var(--hq-panel)] border border-[var(--hq-line)] rounded text-[var(--hq-cream)] focus:outline-none focus:border-[var(--accent)]"
               >
+                <option value="">Not specified</option>
                 <option>PLANNED</option>
                 <option>ACTIVE</option>
                 <option>PAUSED</option>

@@ -1,9 +1,9 @@
-import { verifyCEOSession } from "@/lib/ceo-auth";
+import { verifyCEOSession } from "@/src/lib/ceo-auth";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/src/lib/supabase/admin";
 import Link from "next/link";
-import { ProjectHeader } from "@/components/projects/project-header";
-import { ProjectActionsList } from "@/components/projects/project-actions-list";
+import { ProjectHeader } from "@/src/components/projects/project-header";
+import { ProjectActionsList } from "@/src/components/projects/project-actions-list";
 
 export const metadata = {
   title: "Project Detail - Naadix HQ CEO Portal",
@@ -19,7 +19,7 @@ export default async function ProjectDetailPage(props: {
   }
 
   const { slug } = await props.params;
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: project, error } = await supabase
     .from("projects")
@@ -31,17 +31,20 @@ export default async function ProjectDetailPage(props: {
     redirect("/projects");
   }
 
-  const { data: items = [] } = await supabase
+  const { data: itemsData } = await supabase
     .from("project_items")
     .select("*")
     .eq("project_id", project.id)
     .order("position", { ascending: true });
 
-  const { data: actions = [] } = await supabase
+  const { data: actionsData } = await supabase
     .from("project_actions")
     .select("*")
     .eq("project_id", project.id)
     .order("position", { ascending: true });
+
+  const items = itemsData ?? [];
+  const actions = actionsData ?? [];
 
   // Group items by section
   const itemsBySection: Record<string, typeof items> = {};
@@ -96,14 +99,13 @@ export default async function ProjectDetailPage(props: {
           )}
 
           {/* What I Completed */}
-          {(itemsBySection.completed_work?.length > 0 ||
-            project.overview) && (
+          {itemsBySection.completed_work?.length > 0 && (
             <section id="completed_work" className="scroll-mt-20">
               <h2 className="text-2xl font-bold text-[var(--hq-cream)] mb-4">
                 WHAT I COMPLETED
               </h2>
               <div className="space-y-4">
-                {itemsBySection.completed_work?.map((item) => (
+                {itemsBySection.completed_work.map((item) => (
                   <div
                     key={item.id}
                     className="border-l-4 border-[var(--accent)] pl-4 py-2"
@@ -234,7 +236,7 @@ export default async function ProjectDetailPage(props: {
                       Skills
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {project.skills.map((skill) => (
+                      {project.skills.map((skill: string) => (
                         <span
                           key={skill}
                           className="px-3 py-1 bg-[var(--accent)] text-white rounded-full text-sm"
@@ -251,7 +253,7 @@ export default async function ProjectDetailPage(props: {
                       Technologies
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {project.technologies.map((tech) => (
+                      {project.technologies.map((tech: string) => (
                         <span
                           key={tech}
                           className="px-3 py-1 bg-[var(--hq-panel)] border border-[var(--hq-line)] text-[var(--hq-cream)] rounded-full text-sm"

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { format } from "date-fns";
 
 interface ProjectCardProps {
   id: string;
@@ -70,7 +69,11 @@ export function ProjectCard({
             </div>
           )}
           <span className="ml-auto">
-            {format(new Date(updated_at), "MMM d, yyyy")}
+            {new Date(updated_at).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
           </span>
         </div>
       </div>

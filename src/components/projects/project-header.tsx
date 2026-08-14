@@ -1,7 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
-
 interface ProjectHeaderProps {
   name: string;
   category: string;
@@ -66,7 +64,11 @@ export function ProjectHeader({
             Last Updated
           </p>
           <p className="text-lg font-semibold text-[var(--hq-cream)]">
-            {format(new Date(updated_at), "MMM d, yyyy")}
+            {new Date(updated_at).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
           </p>
         </div>
       </div>

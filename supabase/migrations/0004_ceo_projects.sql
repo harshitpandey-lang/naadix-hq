@@ -67,26 +67,51 @@ create index if not exists project_actions_project_id_idx on public.project_acti
 create index if not exists project_actions_status_idx on public.project_actions(status);
 create index if not exists project_actions_position_idx on public.project_actions(position);
 
--- Enable RLS (policies will be checked server-side via CEO session)
+-- Enable RLS (authorization enforced server-side via CEO session verification)
 alter table public.projects enable row level security;
 alter table public.project_items enable row level security;
 alter table public.project_actions enable row level security;
 
--- Create permissive policies (actual authorization happens server-side via session)
-create policy "Projects are readable" on public.projects for select to anon, authenticated using (true);
-create policy "Projects are insertable" on public.projects for insert to anon, authenticated with check (true);
-create policy "Projects are updatable" on public.projects for update to anon, authenticated using (true) with check (true);
-create policy "Projects are deletable" on public.projects for delete to anon, authenticated using (true);
+-- Revoke all direct access - project data must NOT be publicly accessible.
+-- All reads/writes go through protected server-side API routes that verify the CEO session.
+revoke all on public.projects from anon;
+revoke all on public.projects from authenticated;
+revoke all on public.project_items from anon;
+revoke all on public.project_items from authenticated;
+revoke all on public.project_actions from anon;
+revoke all on public.project_actions from authenticated;
 
-create policy "Project items are readable" on public.project_items for select to anon, authenticated using (true);
-create policy "Project items are insertable" on public.project_items for insert to anon, authenticated with check (true);
-create policy "Project items are updatable" on public.project_items for update to anon, authenticated using (true) with check (true);
-create policy "Project items are deletable" on public.project_items for delete to anon, authenticated using (true);
+-- Deny-by-default policies (no direct table access from client)
+drop policy if exists "Projects are readable" on public.projects;
+drop policy if exists "Projects are insertable" on public.projects;
+drop policy if exists "Projects are updatable" on public.projects;
+drop policy if exists "Projects are deletable" on public.projects;
 
-create policy "Project actions are readable" on public.project_actions for select to anon, authenticated using (true);
-create policy "Project actions are insertable" on public.project_actions for insert to anon, authenticated with check (true);
-create policy "Project actions are updatable" on public.project_actions for update to anon, authenticated using (true) with check (true);
-create policy "Project actions are deletable" on public.project_actions for delete to anon, authenticated using (true);
+drop policy if exists "Project items are readable" on public.project_items;
+drop policy if exists "Project items are insertable" on public.project_items;
+drop policy if exists "Project items are updatable" on public.project_items;
+drop policy if exists "Project items are deletable" on public.project_items;
+
+drop policy if exists "Project actions are readable" on public.project_actions;
+drop policy if exists "Project actions are insertable" on public.project_actions;
+drop policy if exists "Project actions are updatable" on public.project_actions;
+drop policy if exists "Project actions are deletable" on public.project_actions;
+
+-- Default deny policies (will fail for everyone; only service role bypasses)
+create policy "Projects denied" on public.projects for select to anon, authenticated using (false);
+create policy "Projects insert denied" on public.projects for insert to anon, authenticated with check (false);
+create policy "Projects update denied" on public.projects for update to anon, authenticated using (false) with check (false);
+create policy "Projects delete denied" on public.projects for delete to anon, authenticated using (false);
+
+create policy "Project items denied" on public.project_items for select to anon, authenticated using (false);
+create policy "Project items insert denied" on public.project_items for insert to anon, authenticated with check (false);
+create policy "Project items update denied" on public.project_items for update to anon, authenticated using (false) with check (false);
+create policy "Project items delete denied" on public.project_items for delete to anon, authenticated using (false);
+
+create policy "Project actions denied" on public.project_actions for select to anon, authenticated using (false);
+create policy "Project actions insert denied" on public.project_actions for insert to anon, authenticated with check (false);
+create policy "Project actions update denied" on public.project_actions for update to anon, authenticated using (false) with check (false);
+create policy "Project actions delete denied" on public.project_actions for delete to anon, authenticated using (false);
 
 -- Create trigger for updated_at
 drop trigger if exists projects_set_updated_at on public.projects;

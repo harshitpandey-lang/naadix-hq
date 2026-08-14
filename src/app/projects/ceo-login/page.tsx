@@ -1,6 +1,6 @@
-import { verifyCEOSession } from "@/lib/ceo-auth";
+import { verifyCEOSession } from "@/src/lib/ceo-auth";
 import { redirect } from "next/navigation";
-import { CEOLoginForm } from "@/components/projects/ceo-login-form";
+import { CEOLoginForm } from "@/src/components/projects/ceo-login-form";
 
 export const metadata = {
   title: "CEO Portal Login - Naadix HQ",

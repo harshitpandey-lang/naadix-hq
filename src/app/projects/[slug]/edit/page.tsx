@@ -1,8 +1,8 @@
-import { verifyCEOSession } from "@/lib/ceo-auth";
+import { verifyCEOSession } from "@/src/lib/ceo-auth";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/src/lib/supabase/admin";
 import Link from "next/link";
-import { ProjectEditor } from "@/components/projects/project-editor";
+import { ProjectEditor } from "@/src/components/projects/project-editor";
 
 export const metadata = {
   title: "Edit Project - Naadix HQ CEO Portal",
@@ -18,7 +18,7 @@ export default async function ProjectEditPage(props: {
   }
 
   const { slug } = await props.params;
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: project, error } = await supabase
     .from("projects")

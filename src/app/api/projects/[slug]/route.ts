@@ -1,5 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
-import { verifyCEOSession } from "@/lib/ceo-auth";
+import { createAdminClient } from "@/src/lib/supabase/admin";
+import { verifyCEOSession } from "@/src/lib/ceo-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -13,7 +13,7 @@ export async function GET(
     }
 
     const { slug } = await params;
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { data: project, error: projectError } = await supabase
       .from("projects")
@@ -66,7 +66,7 @@ export async function PUT(
 
     const { slug } = await params;
     const body = await request.json();
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Get project ID
     const { data: project, error: projectError } = await supabase
@@ -117,7 +117,7 @@ export async function DELETE(
     }
 
     const { slug } = await params;
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { data: project, error: projectError } = await supabase
       .from("projects")
