@@ -7,13 +7,17 @@ interface ProjectsViewsBarProps {
   search?: string;
   status?: string;
   category?: string;
+  domain?: string;
+  sort?: string;
 }
 
 export function ProjectsViewsBar({
-  view = "table",
+  view = "database",
   search,
   status,
   category,
+  domain,
+  sort,
 }: ProjectsViewsBarProps) {
   const buildUrl = (nextView: string) => {
     const params = new URLSearchParams();
@@ -26,11 +30,19 @@ export function ProjectsViewsBar({
       params.set("category", category);
     }
 
+    if (domain) {
+      params.set("domain", domain);
+    }
+
+    if (sort) {
+      params.set("sort", sort);
+    }
+
     if (search) {
       params.set("search", search);
     }
 
-    if (nextView !== "table") {
+    if (nextView !== "database") {
       params.set("view", nextView);
     }
 
@@ -41,8 +53,8 @@ export function ProjectsViewsBar({
 
   const views = [
     {
-      id: "table",
-      label: "Table",
+      id: "database",
+      label: "Database",
       icon: "?",
     },
     {
@@ -58,7 +70,7 @@ export function ProjectsViewsBar({
   ];
 
   return (
-    <div className="mb-4 flex items-center gap-1 border-b border-[#29383d]">
+    <div className="mb-4 flex items-center gap-1 rounded-md border border-[#29383d] bg-[#0f1719] p-1">
       {views.map((item) => {
         const active = view === item.id;
 
@@ -66,10 +78,10 @@ export function ProjectsViewsBar({
           <Link
             key={item.id}
             href={buildUrl(item.id)}
-            className={`flex items-center gap-2 border-b-2 px-3 py-2.5 text-xs transition ${
+            className={`flex items-center gap-2 rounded-md px-3 py-2 text-xs transition ${
               active
-                ? "border-[#91a6b2] text-[#f2eadf]"
-                : "border-transparent text-[#53676f] hover:text-[#91a6b2]"
+                ? "bg-[#182124] text-[#f2eadf]"
+                : "text-[#53676f] hover:bg-[#131d1f] hover:text-[#91a6b2]"
             }`}
           >
             <span>{item.icon}</span>

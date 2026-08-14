@@ -1,19 +1,11 @@
 "use client";
 
 import Link from "next/link";
-
-interface Project {
-  id: string;
-  slug: string;
-  name: string;
-  category: string;
-  status: string;
-  short_description?: string | null;
-  progress?: number | null;
-}
+import { getStatusLabel } from "@/src/lib/projects/status-utils";
+import { ProjectRecord } from "@/src/lib/projects/types";
 
 interface ProjectsBoardProps {
-  projects: Project[];
+  projects: ProjectRecord[];
 }
 
 const columns = [
@@ -85,7 +77,7 @@ export function ProjectsBoard({
                           </div>
 
                           <div className="mt-1 truncate text-[10px] text-[#53676f]">
-                            {project.category}
+                            {project.category} · {getStatusLabel(project.status)}
                           </div>
                         </div>
                       </div>

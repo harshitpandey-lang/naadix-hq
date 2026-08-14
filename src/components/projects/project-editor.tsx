@@ -2,53 +2,167 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ProjectRecord } from "@/src/lib/projects/types";
 
 interface ProjectEditorProps {
-  project: {
-    id: string;
-    name: string;
-    slug: string;
-    category: string;
-    status: string | null;
-    progress: number | null;
-    short_description: string | null;
-    overview: string | null;
-    current_status: string | null;
-    key_learnings: string | null;
-    challenges: string | null;
-    technical_documentation: string | null;
-    skills: string[] | null;
-    technologies: string[] | null;
-    contributors: string | null;
-    notes: string | null;
-    github_url: string | null;
-  };
+  project: ProjectRecord;
+}
+
+type InputValue = string | number | null;
+
+interface FieldConfig {
+  key: string;
+  label: string;
+  type: "text" | "textarea" | "select" | "number" | "array";
+  options?: string[];
+}
+
+interface SectionConfig {
+  title: string;
+  fields: FieldConfig[];
+}
+
+function hasKey(record: Record<string, unknown>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(record, key);
+}
+
+function normalizeInputValue(value: string): InputValue {
+  return value === "" ? null : value;
+}
+
+function parseArrayValue(value: unknown): string {
+  if (!Array.isArray(value)) {
+    return "";
+  }
+
+  return value
+    .map((item) => (typeof item === "string" ? item.trim() : ""))
+    .filter((item) => item.length > 0)
+    .join(", ");
+}
+
+function parseArrayInput(value: string): string[] | null {
+  const parsed = value
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+
+  return parsed.length > 0 ? parsed : null;
 }
 
 export function ProjectEditor({ project }: ProjectEditorProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState(project);
+  const [formData, setFormData] = useState<Record<string, unknown>>(project);
+
+  const sections: SectionConfig[] = [
+    {
+      title: "Basic Information",
+      fields: [
+        { key: "name", label: "Name", type: "text" },
+        { key: "short_description", label: "Short Description", type: "textarea" },
+        {
+          key: "status",
+          label: "Status",
+          type: "select",
+          options: ["", "PLANNED", "ACTIVE", "PAUSED", "COMPLETED", "ARCHIVED"],
+        },
+        { key: "category", label: "Category", type: "text" },
+        { key: "domain", label: "Domain", type: "text" },
+      ],
+    },
+    {
+      title: "Project Timeline",
+      fields: [
+        { key: "start_date", label: "Start Date", type: "text" },
+        { key: "end_date", label: "End Date", type: "text" },
+        { key: "updated_at", label: "Last Updated", type: "text" },
+      ],
+    },
+    {
+      title: "Role",
+      fields: [
+        { key: "my_role", label: "My Role", type: "textarea" },
+        { key: "my_contribution", label: "My Contribution", type: "textarea" },
+      ],
+    },
+    {
+      title: "Purpose",
+      fields: [
+        { key: "overview", label: "Overview", type: "textarea" },
+        { key: "objective", label: "Objective", type: "textarea" },
+      ],
+    },
+    {
+      title: "Technical",
+      fields: [
+        { key: "technologies", label: "Technologies", type: "array" },
+        { key: "skills", label: "Skills", type: "array" },
+        { key: "hardware", label: "Hardware", type: "array" },
+        { key: "software", label: "Software", type: "array" },
+      ],
+    },
+    {
+      title: "Development",
+      fields: [
+        { key: "implementation", label: "Implementation", type: "textarea" },
+        { key: "challenges", label: "Challenges", type: "textarea" },
+      ],
+    },
+    {
+      title: "Results",
+      fields: [
+        { key: "key_achievements", label: "Key Achievements", type: "textarea" },
+        { key: "outcome", label: "Outcome", type: "textarea" },
+      ],
+    },
+    {
+      title: "Project State",
+      fields: [
+        { key: "current_status", label: "Current Status", type: "textarea" },
+        { key: "next_steps", label: "Next Steps", type: "textarea" },
+      ],
+    },
+    {
+      title: "Resources",
+      fields: [
+        { key: "github_url", label: "GitHub URL", type: "text" },
+        { key: "live_demo_url", label: "Live Demo URL", type: "text" },
+        { key: "project_url", label: "Project URL", type: "text" },
+      ],
+    },
+    {
+      title: "Media",
+      fields: [{ key: "media_notes", label: "Project Images / Media Notes", type: "textarea" }],
+    },
+  ];
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    key: string,
+    value: string,
+    type: FieldConfig["type"],
   ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value === "" ? null : value,
-    }));
-  };
+    setFormData((prev) => {
+      if (type === "array") {
+        return {
+          ...prev,
+          [key]: parseArrayInput(value),
+        };
+      }
 
-  const handleArrayChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    field: "skills" | "technologies",
-  ) => {
-    const value = e.target.value.split(",").map((v) => v.trim());
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+      if (type === "number") {
+        const nextValue = value === "" ? null : Number(value);
+        return {
+          ...prev,
+          [key]: Number.isNaN(nextValue) ? null : nextValue,
+        };
+      }
+
+      return {
+        ...prev,
+        [key]: normalizeInputValue(value),
+      };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -56,12 +170,21 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
     setIsLoading(true);
 
     try {
+      const payload = Object.keys(formData).reduce<Record<string, unknown>>((acc, key) => {
+        if (!hasKey(project as Record<string, unknown>, key)) {
+          return acc;
+        }
+
+        acc[key] = formData[key];
+        return acc;
+      }, {});
+
       const response = await fetch(`/api/projects/${project.slug}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) throw new Error("Failed to update project");
@@ -77,181 +200,98 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl">
-      {/* Basic Info */}
-      <div className="border-t border-[var(--hq-line)] pt-8">
-        <h2 className="text-xl font-bold text-[var(--hq-cream)] mb-6">
-          Basic Information
-        </h2>
+    <form onSubmit={handleSubmit} className="max-w-4xl space-y-8">
+      {sections.map((section) => {
+        const visibleFields = section.fields.filter((field) => hasKey(formData, field.key));
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-[var(--hq-cream)] mb-2">
-              Project Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 bg-[var(--hq-panel)] border border-[var(--hq-line)] rounded text-[var(--hq-cream)] focus:outline-none focus:border-[var(--accent)]"
-            />
-          </div>
+        if (visibleFields.length === 0) {
+          return null;
+        }
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[var(--hq-cream)] mb-2">
-                Category
-              </label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 bg-[var(--hq-panel)] border border-[var(--hq-line)] rounded text-[var(--hq-cream)] focus:outline-none focus:border-[var(--accent)]"
-              >
-                <option>Robotics & Embedded Systems</option>
-                <option>AI & Automation</option>
-                <option>Web & EdTech</option>
-                <option>Sustainability / AgriTech</option>
-              </select>
+        return (
+          <section key={section.title} className="border-t border-[var(--hq-line)] pt-8">
+            <h2 className="mb-5 text-xl font-bold text-[var(--hq-cream)]">{section.title}</h2>
+
+            <div className="space-y-4">
+              {visibleFields.map((field) => {
+                const fieldValue = formData[field.key];
+
+                return (
+                  <div key={field.key}>
+                    <label className="mb-2 block text-sm font-medium text-[var(--hq-cream)]">
+                      {field.label}
+                    </label>
+
+                    {field.type === "textarea" && (
+                      <textarea
+                        name={field.key}
+                        value={(fieldValue as string | null) ?? ""}
+                        onChange={(e) => handleInputChange(field.key, e.target.value, field.type)}
+                        rows={4}
+                        className="w-full rounded border border-[var(--hq-line)] bg-[var(--hq-panel)] px-4 py-2 text-[var(--hq-cream)] focus:border-[var(--accent)] focus:outline-none"
+                      />
+                    )}
+
+                    {field.type === "select" && (
+                      <select
+                        name={field.key}
+                        value={(fieldValue as string | null) ?? ""}
+                        onChange={(e) => handleInputChange(field.key, e.target.value, field.type)}
+                        className="w-full rounded border border-[var(--hq-line)] bg-[var(--hq-panel)] px-4 py-2 text-[var(--hq-cream)] focus:border-[var(--accent)] focus:outline-none"
+                      >
+                        {field.options?.map((option) => (
+                          <option key={option || "empty"} value={option}>
+                            {option || "Not specified"}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
+                    {field.type === "array" && (
+                      <input
+                        type="text"
+                        name={field.key}
+                        value={parseArrayValue(fieldValue)}
+                        onChange={(e) => handleInputChange(field.key, e.target.value, field.type)}
+                        className="w-full rounded border border-[var(--hq-line)] bg-[var(--hq-panel)] px-4 py-2 text-[var(--hq-cream)] focus:border-[var(--accent)] focus:outline-none"
+                        placeholder="Comma-separated values"
+                      />
+                    )}
+
+                    {(field.type === "text" || field.type === "number") && (
+                      <input
+                        type={field.type === "number" ? "number" : "text"}
+                        name={field.key}
+                        value={
+                          typeof fieldValue === "number"
+                            ? String(fieldValue)
+                            : ((fieldValue as string | null) ?? "")
+                        }
+                        onChange={(e) => handleInputChange(field.key, e.target.value, field.type)}
+                        className="w-full rounded border border-[var(--hq-line)] bg-[var(--hq-panel)] px-4 py-2 text-[var(--hq-cream)] focus:border-[var(--accent)] focus:outline-none"
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
+          </section>
+        );
+      })}
 
-            <div>
-              <label className="block text-sm font-medium text-[var(--hq-cream)] mb-2">
-                Status
-              </label>
-              <select
-                name="status"
-                value={formData.status || ""}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 bg-[var(--hq-panel)] border border-[var(--hq-line)] rounded text-[var(--hq-cream)] focus:outline-none focus:border-[var(--accent)]"
-              >
-                <option value="">Not specified</option>
-                <option>PLANNED</option>
-                <option>ACTIVE</option>
-                <option>PAUSED</option>
-                <option>COMPLETED</option>
-                <option>ARCHIVED</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[var(--hq-cream)] mb-2">
-                Progress (0-100)
-              </label>
-              <input
-                type="number"
-                name="progress"
-                min="0"
-                max="100"
-                value={formData.progress ?? ""}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 bg-[var(--hq-panel)] border border-[var(--hq-line)] rounded text-[var(--hq-cream)] focus:outline-none focus:border-[var(--accent)]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[var(--hq-cream)] mb-2">
-                GitHub URL
-              </label>
-              <input
-                type="text"
-                name="github_url"
-                value={formData.github_url || ""}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 bg-[var(--hq-panel)] border border-[var(--hq-line)] rounded text-[var(--hq-cream)] focus:outline-none focus:border-[var(--accent)]"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[var(--hq-cream)] mb-2">
-              Short Description
-            </label>
-            <textarea
-              name="short_description"
-              value={formData.short_description || ""}
-              onChange={handleInputChange}
-              rows={2}
-              className="w-full px-4 py-2 bg-[var(--hq-panel)] border border-[var(--hq-line)] rounded text-[var(--hq-cream)] focus:outline-none focus:border-[var(--accent)]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[var(--hq-cream)] mb-2">
-              Skills (comma-separated)
-            </label>
-            <input
-              type="text"
-              value={formData.skills?.join(", ") || ""}
-              onChange={(e) => handleArrayChange(e, "skills")}
-              className="w-full px-4 py-2 bg-[var(--hq-panel)] border border-[var(--hq-line)] rounded text-[var(--hq-cream)] focus:outline-none focus:border-[var(--accent)]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[var(--hq-cream)] mb-2">
-              Technologies (comma-separated)
-            </label>
-            <input
-              type="text"
-              value={formData.technologies?.join(", ") || ""}
-              onChange={(e) => handleArrayChange(e, "technologies")}
-              className="w-full px-4 py-2 bg-[var(--hq-panel)] border border-[var(--hq-line)] rounded text-[var(--hq-cream)] focus:outline-none focus:border-[var(--accent)]"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Content Sections */}
-      <div className="border-t border-[var(--hq-line)] pt-8">
-        <h2 className="text-xl font-bold text-[var(--hq-cream)] mb-6">
-          Content
-        </h2>
-
-        <div className="space-y-4">
-          {[
-            { label: "Overview", name: "overview" },
-            { label: "Current Status", name: "current_status" },
-            { label: "Key Learnings", name: "key_learnings" },
-            { label: "Challenges", name: "challenges" },
-            { label: "Technical Documentation", name: "technical_documentation" },
-            { label: "Contributors", name: "contributors" },
-            { label: "Notes", name: "notes" },
-          ].map(({ label, name }) => (
-            <div key={name}>
-              <label className="block text-sm font-medium text-[var(--hq-cream)] mb-2">
-                {label}
-              </label>
-              <textarea
-                name={name}
-                value={
-                  formData[name as keyof typeof formData] as string | null || ""
-                }
-                onChange={handleInputChange}
-                rows={4}
-                className="w-full px-4 py-2 bg-[var(--hq-panel)] border border-[var(--hq-line)] rounded text-[var(--hq-cream)] focus:outline-none focus:border-[var(--accent)]"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex gap-4 pt-8 border-t border-[var(--hq-line)]">
+      <div className="flex gap-4 border-t border-[var(--hq-line)] pt-8">
         <button
           type="submit"
           disabled={isLoading}
-          className="px-6 py-2 bg-[var(--accent)] text-white rounded font-medium hover:opacity-90 disabled:opacity-50"
+          className="rounded bg-[var(--accent)] px-6 py-2 font-medium text-white hover:opacity-90 disabled:opacity-50"
         >
           {isLoading ? "Saving..." : "Save Changes"}
         </button>
+
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-6 py-2 border border-[var(--hq-line)] text-[var(--hq-cream)] rounded font-medium hover:bg-[var(--hq-panel)]"
+          className="rounded border border-[var(--hq-line)] px-6 py-2 font-medium text-[var(--hq-cream)] hover:bg-[var(--hq-panel)]"
         >
           Cancel
         </button>

@@ -10,10 +10,8 @@ export function ProjectsDatabaseHeader({
   return (
     <div className="flex items-center justify-between border-b border-[#29383d] pb-3">
       <div className="flex items-center gap-2">
-        <span className="text-sm">??</span>
-
         <span className="text-sm font-medium text-[#f2eadf]">
-          Projects
+          Project Database
         </span>
 
         <span className="rounded-md bg-[#20292c] px-1.5 py-0.5 text-[10px] text-[#667b84]">
@@ -28,20 +26,7 @@ export function ProjectsDatabaseHeader({
       </div>
 
       <div className="flex items-center gap-1">
-        <button
-          type="button"
-          className="flex h-7 items-center gap-1.5 rounded-md px-2 text-xs text-[#667b84] transition hover:bg-[#182124] hover:text-[#91a6b2]"
-        >
-          <span>?</span>
-          <span className="hidden sm:inline">Open</span>
-        </button>
-
-        <button
-          type="button"
-          className="flex h-7 items-center gap-1.5 rounded-md px-2 text-xs text-[#667b84] transition hover:bg-[#182124] hover:text-[#91a6b2]"
-        >
-          <span>•••</span>
-        </button>
+        <span className="text-xs text-[#53676f]">Executive view</span>
       </div>
     </div>
   );

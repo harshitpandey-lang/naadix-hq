@@ -1,50 +1,15 @@
 "use client";
 
 import Link from "next/link";
-
-interface Project {
-  id: string;
-  slug: string;
-  name: string;
-  category: string;
-  status: string;
-  short_description?: string | null;
-  progress?: number | null;
-  updated_at?: string | null;
-}
+import {
+  getStatusChipClass,
+  getStatusDotClass,
+  getStatusLabel,
+} from "@/src/lib/projects/status-utils";
+import { ProjectRecord } from "@/src/lib/projects/types";
 
 interface ProjectsDatabaseProps {
-  projects: Project[];
-}
-
-function statusLabel(status: string) {
-  switch (status) {
-    case "ACTIVE":
-      return "Active";
-    case "COMPLETED":
-      return "Completed";
-    case "PLANNED":
-      return "Planned";
-    case "PAUSED":
-      return "Paused";
-    default:
-      return status;
-  }
-}
-
-function statusClass(status: string) {
-  switch (status) {
-    case "ACTIVE":
-      return "bg-[#263b32] text-[#8fbda1]";
-    case "COMPLETED":
-      return "bg-[#29352f] text-[#9caf9f]";
-    case "PLANNED":
-      return "bg-[#302f28] text-[#b9ad83]";
-    case "PAUSED":
-      return "bg-[#352b2b] text-[#b99797]";
-    default:
-      return "bg-[#202a2d] text-[#91a6b2]";
-  }
+  projects: ProjectRecord[];
 }
 
 function formatDate(date?: string | null) {
@@ -60,90 +25,165 @@ function formatDate(date?: string | null) {
 export function ProjectsDatabase({
   projects,
 }: ProjectsDatabaseProps) {
+  if (projects.length === 0) {
+    return (
+      <div className="rounded-md border border-[#29383d] bg-[#0f1719] px-4 py-8 text-center text-sm text-[#667b84]">
+        No projects match the current filters.
+      </div>
+    );
+  }
+
   return (
-    <div className="overflow-x-auto rounded-md border border-[#29383d] bg-[#0f1719]">
-      <div className="min-w-[870px]">
-        <div className="grid grid-cols-[minmax(280px,1fr)_210px_130px_120px_130px] border-b border-[#29383d] bg-[#131d1f] px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-[#53676f]">
-          <div>Name</div>
-          <div>Category</div>
-          <div>Status</div>
-          <div>Progress</div>
-          <div>Updated</div>
-        </div>
+    <div className="space-y-3">
+      <div className="hidden overflow-x-auto rounded-md border border-[#29383d] bg-[#0f1719] md:block">
+        <div className="min-w-[1080px]">
+          <div className="grid grid-cols-[minmax(230px,1.2fr)_140px_180px_130px_220px_130px] border-b border-[#29383d] bg-[#131d1f] px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-[#53676f]">
+            <div>Project</div>
+            <div>Status</div>
+            <div>Category</div>
+            <div>Domain</div>
+            <div>Technologies</div>
+            <div>Last Updated</div>
+          </div>
 
-        {projects.map((project) => {
-          const progress = Math.min(
-            100,
-            Math.max(0, Number(project.progress ?? 0)),
-          );
+          {projects.map((project) => {
+            const technologies = Array.isArray(project.technologies)
+              ? project.technologies.filter(
+                  (value): value is string => Boolean(value && value.trim()),
+                )
+              : [];
 
-          return (
-            <Link
-              key={project.id}
-              href={`/projects/${project.slug}`}
-              className="grid min-w-[870px] grid-cols-[minmax(280px,1fr)_210px_130px_120px_130px] items-center border-b border-[#202a2d] px-4 py-3.5 text-sm transition hover:bg-[#151f21]"
-            >
-              <div className="min-w-0 pr-6">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[#202a2d] text-xs">
-                    ??
+            return (
+              <div
+                key={project.id}
+                className="grid min-w-[1080px] grid-cols-[minmax(230px,1.2fr)_140px_180px_130px_220px_130px] items-start border-b border-[#202a2d] px-4 py-3.5 text-sm transition hover:bg-[#151f21]"
+              >
+                <div className="min-w-0 pr-4">
+                  <Link
+                    href={`/projects/${project.slug}`}
+                    className="font-medium text-[#e5ded3] transition hover:text-[#f2eadf] hover:underline"
+                  >
+                    {project.name}
+                  </Link>
+
+                  {project.short_description && (
+                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#667b84]">
+                      {project.short_description}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-medium ${getStatusChipClass(
+                      project.status,
+                    )}`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${getStatusDotClass(
+                        project.status,
+                      )}`}
+                      aria-hidden="true"
+                    />
+                    <span>{getStatusLabel(project.status)}</span>
                   </span>
+                </div>
 
-                  <div className="min-w-0">
-                    <div className="truncate font-medium text-[#e5ded3]">
-                      {project.name}
-                    </div>
+                <div className="pr-3 text-xs text-[#667b84]">
+                  {project.category || "—"}
+                </div>
 
-                    {project.short_description && (
-                      <div className="mt-0.5 truncate text-xs text-[#53676f]">
-                        {project.short_description}
-                      </div>
-                    )}
-                  </div>
+                <div className="pr-3 text-xs text-[#667b84]">
+                  {typeof project.domain === "string" && project.domain.trim().length > 0
+                    ? project.domain
+                    : "—"}
+                </div>
+
+                <div className="text-xs text-[#667b84]">
+                  {technologies.length > 0 ? technologies.join(", ") : "—"}
+                </div>
+
+                <div className="text-xs text-[#53676f]">
+                  {formatDate(project.updated_at)}
                 </div>
               </div>
+            );
+          })}
+        </div>
+      </div>
 
-              <div className="truncate pr-4 text-xs text-[#667b84]">
-                {project.category}
-              </div>
+      <div className="grid gap-3 md:hidden">
+        {projects.map((project) => {
+          const technologies = Array.isArray(project.technologies)
+            ? project.technologies.filter(
+                (value): value is string => Boolean(value && value.trim()),
+              )
+            : [];
 
-              <div>
+          return (
+            <article
+              key={project.id}
+              className="rounded-md border border-[#29383d] bg-[#0f1719] p-3"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <Link
+                    href={`/projects/${project.slug}`}
+                    className="text-sm font-medium text-[#e5ded3] underline-offset-2 hover:underline"
+                  >
+                    {project.name}
+                  </Link>
+
+                  {project.short_description && (
+                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#667b84]">
+                      {project.short_description}
+                    </p>
+                  )}
+                </div>
+
                 <span
-                  className={`inline-flex rounded-md px-2 py-1 text-[10px] font-medium ${statusClass(
+                  className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-medium ${getStatusChipClass(
                     project.status,
                   )}`}
                 >
-                  {statusLabel(project.status)}
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${getStatusDotClass(project.status)}`}
+                    aria-hidden="true"
+                  />
+                  <span>{getStatusLabel(project.status)}</span>
                 </span>
               </div>
 
-              <div className="pr-5">
-                <div className="mb-1 text-[10px] text-[#667b84]">
-                  {progress}%
+              <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-[#667b84]">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-[#53676f]">Category</div>
+                  <div className="mt-1">{project.category || "—"}</div>
                 </div>
 
-                <div className="h-1 overflow-hidden rounded-full bg-[#202a2d]">
-                  <div
-                    className="h-full rounded-full bg-[#6d7f86]"
-                    style={{ width: `${progress}%` }}
-                  />
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-[#53676f]">Domain</div>
+                  <div className="mt-1">
+                    {typeof project.domain === "string" && project.domain.trim().length > 0
+                      ? project.domain
+                      : "—"}
+                  </div>
+                </div>
+
+                <div className="col-span-2">
+                  <div className="text-[10px] uppercase tracking-wider text-[#53676f]">Technologies</div>
+                  <div className="mt-1 line-clamp-2">
+                    {technologies.length > 0 ? technologies.join(", ") : "—"}
+                  </div>
+                </div>
+
+                <div className="col-span-2 text-[#53676f]">
+                  Last updated {formatDate(project.updated_at)}
                 </div>
               </div>
 
-              <div className="text-xs text-[#53676f]">
-                {formatDate(project.updated_at)}
-              </div>
-            </Link>
+            </article>
           );
         })}
-
-        <button
-          type="button"
-          className="flex w-full items-center gap-3 px-4 py-3 text-left text-xs text-[#53676f] transition hover:bg-[#151f21] hover:text-[#91a6b2]"
-        >
-          <span className="text-sm">+</span>
-          <span>New project</span>
-        </button>
       </div>
     </div>
   );

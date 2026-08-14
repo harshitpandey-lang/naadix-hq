@@ -1,34 +1,11 @@
 "use client";
 
 import Link from "next/link";
-
-interface Project {
-  id: string;
-  slug: string;
-  name: string;
-  category: string;
-  status: string;
-  progress?: number | null;
-  updated_at?: string | null;
-}
+import { getStatusChipClass, getStatusLabel } from "@/src/lib/projects/status-utils";
+import { ProjectRecord } from "@/src/lib/projects/types";
 
 interface ProjectsTimelineProps {
-  projects: Project[];
-}
-
-function statusClass(status: string) {
-  switch (status) {
-    case "ACTIVE":
-      return "bg-[#263b32] text-[#8fbda1]";
-    case "COMPLETED":
-      return "bg-[#29352f] text-[#9caf9f]";
-    case "PLANNED":
-      return "bg-[#302f28] text-[#b9ad83]";
-    case "PAUSED":
-      return "bg-[#352b2b] text-[#b99797]";
-    default:
-      return "bg-[#202a2d] text-[#91a6b2]";
-  }
+  projects: ProjectRecord[];
 }
 
 function formatDate(date?: string | null) {
@@ -84,11 +61,11 @@ export function ProjectsTimeline({
 
               <div>
                 <span
-                  className={`inline-flex rounded-md px-2 py-1 text-[10px] font-medium ${statusClass(
+                  className={`inline-flex rounded-md px-2 py-1 text-[10px] font-medium ${getStatusChipClass(
                     project.status,
                   )}`}
                 >
-                  {project.status}
+                  {getStatusLabel(project.status)}
                 </span>
               </div>
 
