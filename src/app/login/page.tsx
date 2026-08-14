@@ -11,7 +11,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function LoginPage({ searchParams }: PageProps<"/login">) {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string | string[] | undefined }>;
+}) {
   const { next } = await searchParams;
   const nextPath = getSafeNextPath(typeof next === "string" ? next : undefined);
   const configured = isSupabaseConfigured();
