@@ -1,8 +1,11 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Check, Clock3 } from "lucide-react";
+
 import type { CalendarEvent } from "@/src/types/calendar";
 import type { Goal } from "@/src/types/goals";
+
 import { EventDetailsDialog } from "./event-details-dialog";
 import { GoalDetailsDialog } from "./goal-details-dialog";
 
@@ -12,121 +15,391 @@ interface CalendarMonthViewProps {
   goals: Goal[];
 }
 
-export function CalendarMonthView({ date, events, goals }: CalendarMonthViewProps) {
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
+const WEEKDAYS = [
+  "Sun",
+  "Mon",
+  "Tue",
+  "Wed",
+  "Thu",
+  "Fri",
+  "Sat",
+];
 
-  const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-  const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-  const daysInMonth = lastDay.getDate();
-  const startingDayOfWeek = firstDay.getDay();
+const MAX_VISIBLE_ITEMS = 3;
 
-  const days = [];
-  for (let i = 0; i < startingDayOfWeek; i++) {
-    days.push(null);
-  }
-  for (let i = 1; i <= daysInMonth; i++) {
-    days.push(i);
-  }
+function sameDay(
+  first: Date,
+  second: Date,
+) {
+  return (
+    first.getFullYear() ===
+      second.getFullYear() &&
+    first.getMonth() ===
+      second.getMonth() &&
+    first.getDate() ===
+      second.getDate()
+  );
+}
 
-  const weeks = [];
-  for (let i = 0; i < days.length; i += 7) {
-    weeks.push(days.slice(i, i + 7));
-  }
+function formatTime(value: string) {
+  return new Date(value).toLocaleTimeString(
+    "en-US",
+    {
+      hour: "numeric",
+      minute: "2-digit",
+    },
+  );
+}
 
-  const getEventsForDay = (day: number | null) => {
-    if (!day) return { events: [], goals: [] };
-    const dayDate = new Date(date.getFullYear(), date.getMonth(), day);
-    const dayStart = new Date(dayDate);
+export function CalendarMonthView({
+  date,
+  events,
+  goals,
+}: CalendarMonthViewProps) {
+  const [
+    selectedEvent,
+    setSelectedEvent,
+  ] = useState<CalendarEvent | null>(null);
+
+  const [
+    selectedGoal,
+    setSelectedGoal,
+  ] = useState<Goal | null>(null);
+
+  const today = new Date();
+
+  const calendarDays = useMemo(() => {
+    const firstDay = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      1,
+    );
+
+    const lastDay = new Date(
+      date.getFullYear(),
+      date.getMonth() + 1,
+      0,
+    );
+
+    const leadingDays =
+      firstDay.getDay();
+
+    const totalDays =
+      lastDay.getDate();
+
+    const rawDays: Array<
+      Date | null
+    > = [];
+
+    for (
+      let index = 0;
+      index < leadingDays;
+      index += 1
+    ) {
+      rawDays.push(null);
+    }
+
+    for (
+      let day = 1;
+      day <= totalDays;
+      day += 1
+    ) {
+      rawDays.push(
+        new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          day,
+        ),
+      );
+    }
+
+    while (rawDays.length % 7 !== 0) {
+      rawDays.push(null);
+    }
+
+    return rawDays;
+  }, [date]);
+
+  const getItemsForDay = (
+    day: Date | null,
+  ) => {
+    if (!day) {
+      return {
+        events: [],
+        goals: [],
+      };
+    }
+
+    const dayStart = new Date(day);
     dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(dayDate);
-    dayEnd.setHours(23, 59, 59, 999);
+
+    const dayEnd = new Date(day);
+    dayEnd.setHours(
+      23,
+      59,
+      59,
+      999,
+    );
+
+    const dayEvents = events.filter(
+      (event) => {
+        const start = new Date(
+          event.start_at,
+        );
+
+        const end = new Date(
+          event.end_at,
+        );
+
+        return (
+          start <= dayEnd &&
+          end >= dayStart
+        );
+      },
+    );
+
+    const dayGoals = goals.filter(
+      (goal) => {
+        if (
+          !goal.scheduled_start ||
+          !goal.scheduled_end
+        ) {
+          return false;
+        }
+
+        const start = new Date(
+          goal.scheduled_start,
+        );
+
+        const end = new Date(
+          goal.scheduled_end,
+        );
+
+        return (
+          start <= dayEnd &&
+          end >= dayStart
+        );
+      },
+    );
 
     return {
-      events: events.filter((e) => {
-        const eventStart = new Date(e.start_at);
-        const eventEnd = new Date(e.end_at);
-        return eventStart <= dayEnd && eventEnd >= dayStart;
-      }),
-      goals: goals.filter((g) => {
-        if (!g.scheduled_start || !g.scheduled_end) return false;
-        const goalStart = new Date(g.scheduled_start);
-        const goalEnd = new Date(g.scheduled_end);
-        return goalStart <= dayEnd && goalEnd >= dayStart;
-      }),
+      events: dayEvents,
+      goals: dayGoals,
     };
   };
 
-  const monthName = date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-
   return (
-    <div>
-      <h2 className="mb-6 text-lg font-semibold text-[var(--hq-cream)]">{monthName}</h2>
+    <div className="overflow-hidden">
+      {/* Weekday header */}
+      <div className="grid grid-cols-7 border-b border-[var(--hq-line)] bg-[var(--hq-panel)]">
+        {WEEKDAYS.map(
+          (weekday) => (
+            <div
+              key={weekday}
+              className="px-2 py-3 text-center text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--hq-muted)] sm:px-3"
+            >
+              {weekday}
+            </div>
+          ),
+        )}
+      </div>
 
-      <div className="grid gap-px overflow-hidden rounded-lg border border-[var(--hq-line)] bg-[var(--hq-line)]">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-          <div key={day} className="bg-[#162023] p-3 text-center text-xs font-semibold text-[#8cbde0]">
-            {day}
-          </div>
-        ))}
+      {/* Calendar grid */}
+      <div className="grid grid-cols-7 gap-px bg-[var(--hq-line-soft)]">
+        {calendarDays.map(
+          (day, index) => {
+            const {
+              events: dayEvents,
+              goals: dayGoals,
+            } =
+              getItemsForDay(day);
 
-        {weeks.map((week, weekIndex) =>
-          week.map((day, dayIndex) => {
-            const { events: dayEvents, goals: dayGoals } = getEventsForDay(day);
-            const isCurrentMonth = day !== null;
             const isToday =
-              isCurrentMonth &&
-              day === new Date().getDate() &&
-              date.getMonth() === new Date().getMonth() &&
-              date.getFullYear() === new Date().getFullYear();
+              day !== null &&
+              sameDay(day, today);
+
+            const isEmpty =
+              day === null;
+
+            const combined = [
+              ...dayEvents.map(
+                (event) => ({
+                  type: "event" as const,
+                  id: event.id,
+                  item: event,
+                }),
+              ),
+              ...dayGoals.map(
+                (goal) => ({
+                  type: "goal" as const,
+                  id: goal.id,
+                  item: goal,
+                }),
+              ),
+            ];
+
+            const visibleItems =
+              combined.slice(
+                0,
+                MAX_VISIBLE_ITEMS,
+              );
+
+            const hiddenCount =
+              Math.max(
+                0,
+                combined.length -
+                  MAX_VISIBLE_ITEMS,
+              );
 
             return (
               <div
-                key={`${weekIndex}-${dayIndex}`}
-                className={`min-h-24 bg-[#162023] p-2 ${
-                  isToday ? "border-l-4 border-l-[#8cbde0]" : ""
-                } ${!isCurrentMonth ? "bg-[#0f1315]" : ""}`}
+                key={`${day?.toISOString() ?? "empty"}-${index}`}
+                className={`min-h-[108px] bg-[var(--hq-panel)] p-2 transition sm:min-h-[128px] sm:p-2.5 ${
+                  isEmpty
+                    ? "bg-[var(--hq-sidebar)] opacity-50"
+                    : "hover:bg-[var(--hq-panel-hover)]"
+                }`}
               >
-                <div className={`mb-1 text-xs font-semibold ${isCurrentMonth ? "text-[var(--hq-cream)]" : "text-[#4a5f66]"}`}>
-                  {day}
-                </div>
-                <div className="space-y-1">
-                  {dayEvents.slice(0, 2).map((event) => (
-                    <button
-                      key={event.id}
-                      onClick={() => setSelectedEvent(event)}
-                      className="block w-full truncate rounded bg-[#8cbde0]/20 px-1 py-0.5 text-left text-xs text-[#8cbde0] transition hover:bg-[#8cbde0]/30"
-                    >
-                      {event.title}
-                    </button>
-                  ))}
-                  {dayGoals.slice(0, 2).map((goal) => (
-                    <button
-                      key={`goal-${goal.id}`}
-                      onClick={() => setSelectedGoal(goal)}
-                      className={`block w-full truncate rounded px-1 py-0.5 text-left text-xs transition ${
-                        goal.completed
-                          ? "bg-green-900/20 text-green-400 line-through"
-                          : "bg-amber-900/20 text-amber-400"
+                {/* Day number */}
+                <div className="mb-2 flex items-center justify-between">
+                  {day ? (
+                    <span
+                      className={`grid h-6 min-w-6 place-items-center rounded-full px-1 text-[11px] font-medium ${
+                        isToday
+                          ? "bg-[var(--hq-accent)] font-semibold text-[var(--navy)]"
+                          : "text-[var(--hq-muted-strong)]"
                       }`}
                     >
-                      🎯 {goal.title}
+                      {day.getDate()}
+                    </span>
+                  ) : (
+                    <span />
+                  )}
+
+                  {day &&
+                    combined.length >
+                      0 && (
+                      <span className="text-[9px] text-[var(--hq-muted)]">
+                        {combined.length}
+                      </span>
+                    )}
+                </div>
+
+                {/* Items */}
+                <div className="space-y-1">
+                  {visibleItems.map(
+                    (entry) => {
+                      if (
+                        entry.type ===
+                        "event"
+                      ) {
+                        const event =
+                          entry.item;
+
+                        return (
+                          <button
+                            key={`event-${event.id}`}
+                            type="button"
+                            onClick={() =>
+                              setSelectedEvent(
+                                event,
+                              )
+                            }
+                            className="group flex w-full min-w-0 items-center gap-1.5 rounded px-1.5 py-1 text-left transition hover:bg-[var(--hq-accent-soft)]"
+                          >
+                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--hq-accent)]" />
+
+                            <span className="min-w-0 flex-1 truncate text-[10px] text-[var(--hq-muted-strong)] group-hover:text-[var(--hq-cream)] sm:text-[11px]">
+                              {event.title}
+                            </span>
+
+                            <span className="hidden shrink-0 text-[9px] text-[var(--hq-muted)] xl:inline">
+                              {formatTime(
+                                event.start_at,
+                              )}
+                            </span>
+                          </button>
+                        );
+                      }
+
+                      const goal =
+                        entry.item;
+
+                      return (
+                        <button
+                          key={`goal-${goal.id}`}
+                          type="button"
+                          onClick={() =>
+                            setSelectedGoal(
+                              goal,
+                            )
+                          }
+                          className={`group flex w-full min-w-0 items-center gap-1.5 rounded px-1.5 py-1 text-left transition ${
+                            goal.completed
+                              ? "opacity-55 hover:bg-white/[0.025]"
+                              : "hover:bg-[var(--hq-accent-soft)]"
+                          }`}
+                        >
+                          {goal.completed ? (
+                            <Check
+                              size={11}
+                              className="shrink-0 text-[var(--hq-green)]"
+                            />
+                          ) : (
+                            <Clock3
+                              size={11}
+                              className="shrink-0 text-[var(--hq-yellow)]"
+                            />
+                          )}
+
+                          <span
+                            className={`min-w-0 flex-1 truncate text-[10px] sm:text-[11px] ${
+                              goal.completed
+                                ? "text-[var(--hq-muted)] line-through"
+                                : "text-[var(--hq-muted-strong)] group-hover:text-[var(--hq-cream)]"
+                            }`}
+                          >
+                            {goal.title}
+                          </span>
+                        </button>
+                      );
+                    },
+                  )}
+
+                  {hiddenCount > 0 && (
+                    <button
+                      type="button"
+                      className="px-1.5 text-[9px] font-medium text-[var(--hq-muted)] transition hover:text-[var(--hq-accent)]"
+                    >
+                      +{hiddenCount} more
                     </button>
-                  ))}
-                  {dayEvents.length + dayGoals.length > 4 && (
-                    <div className="text-xs text-[var(--hq-muted)]">
-                      +{dayEvents.length + dayGoals.length - 4} more
-                    </div>
                   )}
                 </div>
               </div>
             );
-          })
+          },
         )}
       </div>
 
-      <EventDetailsDialog event={selectedEvent} open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)} />
-      <GoalDetailsDialog goal={selectedGoal} open={!!selectedGoal} onOpenChange={(open) => !open && setSelectedGoal(null)} />
+      <EventDetailsDialog
+        event={selectedEvent}
+        open={Boolean(selectedEvent)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedEvent(null);
+          }
+        }}
+      />
+
+      <GoalDetailsDialog
+        goal={selectedGoal}
+        open={Boolean(selectedGoal)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedGoal(null);
+          }
+        }}
+      />
     </div>
   );
 }
