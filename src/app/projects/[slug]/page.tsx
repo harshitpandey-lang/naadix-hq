@@ -4,9 +4,12 @@ import { createAdminClient } from "@/src/lib/supabase/admin";
 import Link from "next/link";
 import { ProjectHeader } from "@/src/components/projects/project-header";
 import { ProjectActionsList } from "@/src/components/projects/project-actions-list";
+import { ProjectsSidebar } from "@/src/components/projects/projects-sidebar";
+import { ProjectsMobileHeader } from "@/src/components/projects/projects-mobile-header";
+import { ProjectProperties } from "@/src/components/projects/project-properties";
 
 export const metadata = {
-  title: "Project Detail - Naadix HQ CEO Portal",
+  title: "Project Detail - Naadix HQ",
 };
 
 export default async function ProjectDetailPage(props: {
@@ -46,227 +49,150 @@ export default async function ProjectDetailPage(props: {
   const items = itemsData ?? [];
   const actions = actionsData ?? [];
 
-  // Group items by section
   const itemsBySection: Record<string, typeof items> = {};
+
   items.forEach((item) => {
     if (!itemsBySection[item.section]) {
       itemsBySection[item.section] = [];
     }
+
     itemsBySection[item.section].push(item);
   });
 
+  const progress = Math.min(
+    100,
+    Math.max(0, Number(project.progress ?? 0)),
+  );
+
   return (
-    <div className="min-h-screen bg-[var(--hq)] text-white">
-      {/* Header */}
-      <header className="border-b border-[var(--hq-line)] bg-[var(--hq-panel)] sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link
-            href="/projects"
-            className="text-[var(--hq-muted)] hover:text-[var(--hq-cream)] transition"
-          >
-            ← Back to Projects
-          </Link>
-          <Link
-            href={`/projects/${slug}/edit`}
-            className="px-4 py-2 bg-[var(--accent)] text-white rounded font-medium hover:opacity-90"
-          >
-            Edit Project
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#0b1214] text-[#e5ded3]">
+      <ProjectsSidebar />
+      <ProjectsMobileHeader />
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-12">
-        <ProjectHeader
-          name={project.name}
-          category={project.category}
-          status={project.status}
-          progress={project.progress}
-          updated_at={project.updated_at}
-        />
+      <main className="min-h-screen md:ml-60">
+        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8 md:px-10">
+          <div className="mb-8 flex items-center justify-between">
+            <Link
+              href="/projects"
+              className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-[#667b84] transition hover:bg-[#182124] hover:text-[#f2eadf]"
+            >
+              <span>?</span>
+              <span>Projects</span>
+            </Link>
 
-        <div className="space-y-16">
-          {/* Executive Summary */}
-          {project.overview && (
-            <section id="overview" className="scroll-mt-20">
-              <h2 className="text-2xl font-bold text-[var(--hq-cream)] mb-4">
-                EXECUTIVE SUMMARY
-              </h2>
-              <div className="text-[var(--hq-muted)] leading-relaxed whitespace-pre-wrap">
-                {project.overview}
-              </div>
-            </section>
+            <form action="/api/projects/ceo/logout" method="POST">
+              <button
+                type="submit"
+                className="rounded-md px-2 py-1.5 text-xs text-[#667b84] transition hover:bg-[#182124] hover:text-[#f2eadf]"
+              >
+                Logout
+              </button>
+            </form>
+          </div>
+
+          <header className="border-b border-[#29383d] pb-10">
+            <div className="mb-5 text-4xl">
+              ??
+            </div>
+
+            <h1 className="text-3xl font-bold tracking-tight text-[#f2eadf] sm:text-4xl md:text-5xl lg:text-6xl">
+              {project.name}
+            </h1>
+
+            <p className="mt-4 max-w-3xl text-base leading-7 text-[#788990]">
+              {project.short_description}
+            </p>
+
+            <div className="mt-6 max-w-2xl">
+              <ProjectProperties
+                category={project.category}
+                status={project.status}
+                progress={progress}
+                slug={project.slug}
+              />
+            </div>
+          </header>
+
+          <section className="mt-10">
+            <ProjectHeader
+              name={project.name}
+              category={project.category}
+              status={project.status}
+              progress={project.progress}
+              updated_at={project.updated_at}
+            />
+          </section>
+
+          {Object.entries(itemsBySection).map(
+            ([section, sectionItems]) => (
+              <section key={section} className="mt-12">
+                <div className="mb-4 flex items-center gap-2">
+                  <span className="text-xs text-[#53676f]">
+                    ?
+                  </span>
+
+                  <h2 className="text-sm font-semibold text-[#f2eadf]">
+                    {section}
+                  </h2>
+
+                  <span className="rounded-md bg-[#202a2d] px-1.5 py-0.5 text-[10px] text-[#667b84]">
+                    {sectionItems.length}
+                  </span>
+                </div>
+
+                <div className="overflow-hidden border-y border-[#29383d]">
+                  {sectionItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="border-b border-[#202a2d] px-2 py-4 last:border-b-0 hover:bg-[#111a1c]"
+                    >
+                      <div className="text-sm text-[#d8d1c7]">
+                        {item.title}
+                      </div>
+
+                      {item.description && (
+                        <p className="mt-1 max-w-3xl text-xs leading-6 text-[#667b84]">
+                          {item.description}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ),
           )}
 
-          {/* What I Completed */}
-          {itemsBySection.completed_work?.length > 0 && (
-            <section id="completed_work" className="scroll-mt-20">
-              <h2 className="text-2xl font-bold text-[var(--hq-cream)] mb-4">
-                WHAT I COMPLETED
-              </h2>
-              <div className="space-y-4">
-                {itemsBySection.completed_work.map((item) => (
-                  <div
-                    key={item.id}
-                    className="border-l-4 border-[var(--accent)] pl-4 py-2"
-                  >
-                    <h3 className="font-semibold text-[var(--hq-cream)]">
-                      {item.title}
-                    </h3>
-                    {item.description && (
-                      <p className="text-sm text-[var(--hq-muted)] mt-1">
-                        {item.description}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+          <section className="mt-12">
+            <div className="mb-4 flex items-center gap-2">
+              <span className="text-xs text-[#53676f]">
+                ?
+              </span>
 
-          {/* Current Status */}
-          {project.current_status && (
-            <section id="current_status" className="scroll-mt-20">
-              <h2 className="text-2xl font-bold text-[var(--hq-cream)] mb-4">
-                CURRENT STATUS
+              <h2 className="text-sm font-semibold text-[#f2eadf]">
+                Actions
               </h2>
-              <div className="text-[var(--hq-muted)] leading-relaxed whitespace-pre-wrap">
-                {project.current_status}
-              </div>
-            </section>
-          )}
 
-          {/* Key Learnings */}
-          {(itemsBySection.learnings?.length > 0 ||
-            project.key_learnings) && (
-            <section id="learnings" className="scroll-mt-20">
-              <h2 className="text-2xl font-bold text-[var(--hq-cream)] mb-4">
-                KEY LEARNINGS / INSIGHTS
-              </h2>
-              <div className="space-y-4">
-                {itemsBySection.learnings?.map((item) => (
-                  <div key={item.id} className="bg-[var(--hq-panel)] p-4 rounded">
-                    <h3 className="font-semibold text-[var(--hq-cream)]">
-                      {item.title}
-                    </h3>
-                    {item.description && (
-                      <p className="text-sm text-[var(--hq-muted)] mt-2">
-                        {item.description}
-                      </p>
-                    )}
-                  </div>
-                ))}
-                {project.key_learnings && (
-                  <div className="text-[var(--hq-muted)] leading-relaxed whitespace-pre-wrap">
-                    {project.key_learnings}
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
+              <span className="rounded-md bg-[#202a2d] px-1.5 py-0.5 text-[10px] text-[#667b84]">
+                {actions.length}
+              </span>
+            </div>
 
-          {/* Challenges */}
-          {(itemsBySection.challenges?.length > 0 ||
-            project.challenges) && (
-            <section id="challenges" className="scroll-mt-20">
-              <h2 className="text-2xl font-bold text-[var(--hq-cream)] mb-4">
-                CHALLENGES / BLOCKERS
-              </h2>
-              <div className="space-y-4">
-                {itemsBySection.challenges?.map((item) => (
-                  <div
-                    key={item.id}
-                    className="border-l-4 border-red-500 pl-4 py-2"
-                  >
-                    <h3 className="font-semibold text-[var(--hq-cream)]">
-                      {item.title}
-                    </h3>
-                    {item.description && (
-                      <p className="text-sm text-[var(--hq-muted)] mt-1">
-                        {item.description}
-                      </p>
-                    )}
-                  </div>
-                ))}
-                {project.challenges && (
-                  <div className="text-[var(--hq-muted)] leading-relaxed whitespace-pre-wrap">
-                    {project.challenges}
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
-
-          {/* Next Actions */}
-          {actions.length > 0 && (
-            <section id="next_actions" className="scroll-mt-20">
-              <h2 className="text-2xl font-bold text-[var(--hq-cream)] mb-4">
-                NEXT ACTIONS
-              </h2>
+            <div className="border-y border-[#29383d] py-2">
               <ProjectActionsList
-                projectSlug={slug}
+                projectSlug={project.slug}
                 actions={actions}
               />
-            </section>
-          )}
+            </div>
+          </section>
 
-          {/* Technical Documentation */}
-          {project.technical_documentation && (
-            <section id="technical_documentation" className="scroll-mt-20">
-              <h2 className="text-2xl font-bold text-[var(--hq-cream)] mb-4">
-                TECHNICAL DOCUMENTATION
-              </h2>
-              <div className="text-[var(--hq-muted)] leading-relaxed whitespace-pre-wrap">
-                {project.technical_documentation}
-              </div>
-            </section>
-          )}
-
-          {/* Skills & Technologies */}
-          {(project.skills?.length > 0 ||
-            project.technologies?.length > 0) && (
-            <section id="skills" className="scroll-mt-20">
-              <h2 className="text-2xl font-bold text-[var(--hq-cream)] mb-4">
-                SKILLS & TECHNOLOGIES
-              </h2>
-              <div className="grid grid-cols-2 gap-8">
-                {project.skills?.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold text-[var(--hq-cream)] mb-3">
-                      Skills
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {project.skills.map((skill: string) => (
-                        <span
-                          key={skill}
-                          className="px-3 py-1 bg-[var(--accent)] text-white rounded-full text-sm"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {project.technologies?.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold text-[var(--hq-cream)] mb-3">
-                      Technologies
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {project.technologies.map((tech: string) => (
-                        <span
-                          key={tech}
-                          className="px-3 py-1 bg-[var(--hq-panel)] border border-[var(--hq-line)] text-[var(--hq-cream)] rounded-full text-sm"
-                        >
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
+          <footer className="mt-12 border-t border-[#29383d] pt-5">
+            <Link
+              href="/projects"
+              className="text-xs text-[#667b84] transition hover:text-[#f2eadf]"
+            >
+              ? Back to Projects
+            </Link>
+          </footer>
         </div>
       </main>
     </div>
