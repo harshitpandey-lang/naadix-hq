@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { DashboardOverview } from "@/src/components/dashboard/dashboard-overview";
 import { DashboardShell } from "@/src/components/dashboard/dashboard-shell";
-import { profile as publicProfile } from "@/src/data/profile";
+import { profile as publicProfile } from "@/src/data/profile/profile";
 import { getOrCreateProfile } from "@/src/lib/profile";
 import { isSupabaseConfigured } from "@/src/lib/supabase/config";
 import { createClient } from "@/src/lib/supabase/server";

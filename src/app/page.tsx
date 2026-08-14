@@ -9,7 +9,7 @@ import { ProfileFooter } from "@/src/components/profile/profile-footer";
 import { ProfileHeader } from "@/src/components/profile/profile-header";
 import { SiteNavigation } from "@/src/components/profile/site-navigation";
 import { SkillsSection } from "@/src/components/profile/skills-section";
-import { certifications, education, experiences, featuredItems, languages, profile, skills } from "@/src/data/profile";
+import { certifications, education, experiences, featuredItems, languages, profile, skills } from "@/src/data/profile/profile";
 
 export default function Home() {
   return (

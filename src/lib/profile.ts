@@ -1,5 +1,5 @@
 import type { User } from "@supabase/supabase-js";
-import { profile as publicProfile } from "@/src/data/profile";
+import { profile as publicProfile } from "@/src/data/profile/profile";
 import { createClient } from "./supabase/server";
 
 export type PrivateProfile = {
