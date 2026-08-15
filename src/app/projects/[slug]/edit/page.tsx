@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/src/lib/supabase/admin";
 import Link from "next/link";
 import { ProjectEditor } from "@/src/components/projects/project-editor";
+import { ProjectItemsManager } from "@/src/components/projects/project-items-manager";
+import { ProjectActionsManager } from "@/src/components/projects/project-actions-manager";
 
 export const metadata = {
   title: "Edit Project - Naadix HQ CEO Portal",
@@ -30,6 +32,20 @@ export default async function ProjectEditPage(props: {
     redirect("/projects");
   }
 
+  // Fetch project items
+  const { data: items = [] } = await supabase
+    .from("project_items")
+    .select("*")
+    .eq("project_id", project.id)
+    .order("position", { ascending: true });
+
+  // Fetch project actions
+  const { data: actions = [] } = await supabase
+    .from("project_actions")
+    .select("*")
+    .eq("project_id", project.id)
+    .order("position", { ascending: true });
+
   return (
     <div className="min-h-screen bg-[var(--hq)] text-white">
       {/* Header */}
@@ -51,6 +67,20 @@ export default async function ProjectEditPage(props: {
         </h1>
 
         <ProjectEditor project={project} />
+
+        <hr className="my-12 border-[var(--hq-line)]" />
+
+        <ProjectActionsManager
+          project={project}
+          actions={actions}
+        />
+
+        <hr className="my-12 border-[var(--hq-line)]" />
+
+        <ProjectItemsManager
+          project={project}
+          items={items}
+        />
       </main>
     </div>
   );

@@ -12,6 +12,7 @@ import { ProjectStats } from "@/src/components/projects/project-stats";
 import { buildExecutiveSummary, applyProjectFiltersAndSort } from "@/src/lib/projects/project-filters";
 import { ProjectSortKey } from "@/src/lib/projects/types";
 import { getStatusChipClass, getStatusLabel } from "@/src/lib/projects/status-utils";
+import { ProjectsPageShell } from "@/src/components/projects/projects-page-shell";
 import Link from "next/link";
 
 export const metadata = {
@@ -60,26 +61,12 @@ export default async function ProjectsDashboardPage(props: {
     <div className="min-h-screen bg-[#0b1214] text-[#e5ded3]">
       <main className="min-h-screen">
         <div className="mx-auto max-w-6xl px-6 py-8 md:px-10">
-          <div className="mb-6 flex items-center justify-between">
-            <div className="text-xs text-[#53676f]">
-              Naadix HQ / Projects
-            </div>
+          <ProjectsPageShell>
+            <ProjectsPageHeader projectCount={filteredProjects.length} />
 
-            <form action="/api/projects/ceo/logout" method="POST">
-              <button
-                type="submit"
-                className="rounded-md px-2 py-1.5 text-xs text-[#667b84] transition hover:bg-[#182124] hover:text-[#f2eadf]"
-              >
-                Logout
-              </button>
-            </form>
-          </div>
-
-          <ProjectsPageHeader projectCount={filteredProjects.length} />
-
-          <section className="mb-7">
-            <ProjectStats projects={filteredProjects} />
-          </section>
+            <section className="mb-7">
+              <ProjectStats projects={filteredProjects} />
+            </section>
 
           <section className="mb-8 grid gap-5 lg:grid-cols-3">
             <article className="rounded-md border border-[#29383d] bg-[#0f1719] p-4 lg:col-span-2">
@@ -191,6 +178,7 @@ export default async function ProjectsDashboardPage(props: {
               search={searchParams?.search}
             />
           </div>
+          </ProjectsPageShell>
         </div>
       </main>
     </div>
