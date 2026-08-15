@@ -6,6 +6,7 @@ import Image from "next/image";
 import { ProjectsSidebar } from "@/src/components/projects/projects-sidebar";
 import { ProjectsMobileHeader } from "@/src/components/projects/projects-mobile-header";
 import { ProjectDocument } from "@/src/components/projects/project-document";
+import { ProjectPropertyPanel } from "@/src/components/projects/project-property-panel";
 import { getProjectMediaBySlug } from "@/src/lib/projects/media-map";
 import { getStatusLabel } from "@/src/lib/projects/status-utils";
 import { ProjectRecord } from "@/src/lib/projects/types";
@@ -226,6 +227,7 @@ export default async function ProjectDetailPage(props: {
           </header>
 
           <div className="mt-10 space-y-10">
+            <ProjectPropertyPanel project={projectRecord} />
             <ProjectDocument sections={documentSections} />
 
             {(technologyValues.length > 0 ||

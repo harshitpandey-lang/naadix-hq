@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/src/lib/supabase/admin";
 import Link from "next/link";
 import { ProjectEditor } from "@/src/components/projects/project-editor";
-import { ProjectItemsManager } from "@/src/components/projects/project-items-manager";
 import { ProjectActionsManager } from "@/src/components/projects/project-actions-manager";
+import { BlockEditor } from "@/src/components/projects/block-editor";
 
 export const metadata = {
   title: "Edit Project - Naadix HQ CEO Portal",
@@ -32,19 +32,20 @@ export default async function ProjectEditPage(props: {
     redirect("/projects");
   }
 
-  // Fetch project items
-  const { data: items = [] } = await supabase
+  const { data: itemsData } = await supabase
     .from("project_items")
     .select("*")
     .eq("project_id", project.id)
     .order("position", { ascending: true });
 
-  // Fetch project actions
-  const { data: actions = [] } = await supabase
+  const { data: actionsData } = await supabase
     .from("project_actions")
     .select("*")
     .eq("project_id", project.id)
     .order("position", { ascending: true });
+
+  const items = itemsData ?? [];
+  const actions = actionsData ?? [];
 
   return (
     <div className="min-h-screen bg-[var(--hq)] text-white">
@@ -70,16 +71,38 @@ export default async function ProjectEditPage(props: {
 
         <hr className="my-12 border-[var(--hq-line)]" />
 
-        <ProjectActionsManager
-          project={project}
-          actions={actions}
-        />
+        <div className="space-y-6">
+          <div>
+            <h2 className="mb-4 text-xl font-bold text-[var(--hq-cream)]">
+              Document Blocks
+            </h2>
+            <p className="mb-6 text-sm text-[var(--hq-muted)]">
+              A reusable block-based content engine for project documents, notes, and future knowledge content.
+            </p>
+            <BlockEditor projectSlug={project.slug} blocks={items.map((item) => ({
+              id: item.id,
+              type: item.type ?? "paragraph",
+              position: item.position ?? 0,
+              content: item.content ?? item.description ?? item.title ?? "",
+              created_at: item.created_at,
+              updated_at: item.updated_at,
+              title: item.title,
+              description: item.description,
+              url: item.url,
+              image_url: item.image_url,
+              alt_text: item.alt_text,
+              caption: item.caption,
+              section: item.section,
+              metadata: item.metadata ?? null,
+            }))} />
+          </div>
+        </div>
 
         <hr className="my-12 border-[var(--hq-line)]" />
 
-        <ProjectItemsManager
+        <ProjectActionsManager
           project={project}
-          items={items}
+          actions={actions}
         />
       </main>
     </div>

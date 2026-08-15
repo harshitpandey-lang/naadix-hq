@@ -55,17 +55,22 @@ export function ProjectsViewsBar({
     {
       id: "database",
       label: "Database",
-      icon: "?",
+      icon: "▦",
     },
     {
       id: "board",
       label: "Board",
-      icon: "?",
+      icon: "▣",
     },
     {
       id: "timeline",
       label: "Timeline",
-      icon: "?",
+      icon: "↔",
+    },
+    {
+      id: "gallery",
+      label: "Gallery",
+      icon: "◫",
     },
   ];
 

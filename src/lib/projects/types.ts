@@ -1,16 +1,35 @@
 export type CanonicalProjectStatus =
+  | "IDEA"
   | "PLANNED"
   | "ACTIVE"
-  | "PAUSED"
+  | "ON_HOLD"
+  | "BLOCKED"
   | "COMPLETED"
-  | "ARCHIVED";
+  | "ARCHIVED"
+  | "PAUSED";
+
+export const PROJECT_STATUS_OPTIONS: CanonicalProjectStatus[] = [
+  "IDEA",
+  "PLANNED",
+  "ACTIVE",
+  "ON_HOLD",
+  "BLOCKED",
+  "COMPLETED",
+  "ARCHIVED",
+];
+
+export type ProjectDatabaseView = "database" | "board" | "timeline" | "gallery";
 
 export type ProjectSortKey =
   | "updated-desc"
   | "updated-asc"
   | "name-asc"
   | "name-desc"
-  | "status";
+  | "status"
+  | "status-asc"
+  | "status-desc"
+  | "created-desc"
+  | "created-asc";
 
 export interface ProjectRecord {
   id: string;
@@ -53,4 +72,7 @@ export interface ProjectFilterParams {
   category?: string;
   domain?: string;
   sort?: ProjectSortKey;
+  view?: ProjectDatabaseView;
+  group?: string;
+  visibleProperties?: string[];
 }

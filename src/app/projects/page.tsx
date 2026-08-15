@@ -4,6 +4,7 @@ import { createAdminClient } from "@/src/lib/supabase/admin";
 import { ProjectsDatabase } from "@/src/components/projects/projects-database";
 import { ProjectsBoard } from "@/src/components/projects/projects-board";
 import { ProjectsTimeline } from "@/src/components/projects/projects-timeline";
+import { ProjectsGallery } from "@/src/components/projects/projects-gallery";
 import { ProjectsDatabaseHeader } from "@/src/components/projects/projects-database-header";
 import { ProjectsViewsBar } from "@/src/components/projects/projects-views-bar";
 import { ProjectsPageHeader } from "@/src/components/projects/projects-page-header";
@@ -55,7 +56,9 @@ export default async function ProjectsDashboardPage(props: {
     sort: searchParams?.sort,
   });
   const summary = buildExecutiveSummary(filteredProjects);
-  const view = searchParams?.view === "table" ? "database" : (searchParams?.view ?? "database");
+  const view = searchParams?.view === "gallery" || searchParams?.view === "board" || searchParams?.view === "timeline" || searchParams?.view === "database"
+    ? searchParams.view
+    : "database";
 
   return (
     <div className="min-h-screen bg-[#0b1214] text-[#e5ded3]">
@@ -168,6 +171,8 @@ export default async function ProjectsDashboardPage(props: {
               <ProjectsBoard projects={filteredProjects} />
             ) : view === "timeline" ? (
               <ProjectsTimeline projects={filteredProjects} />
+            ) : view === "gallery" ? (
+              <ProjectsGallery projects={filteredProjects} />
             ) : (
               <ProjectsDatabase projects={filteredProjects} />
             )}

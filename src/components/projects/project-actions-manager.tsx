@@ -22,8 +22,6 @@ interface ProjectActionsManagerProps {
   onActionsChange?: () => void;
 }
 
-const STATUS_OPTIONS = ["TODO", "IN_PROGRESS", "DONE"];
-
 export function ProjectActionsManager({
   project,
   actions,
